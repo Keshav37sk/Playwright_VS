@@ -1,38 +1,55 @@
-exports.HomePage=
+exports.HomePage = class HomePage {
 
-class HomePage{
+    constructor(page) {
+        this.page = page;
 
-    constructor(page){  
-        this.page=page;
-        this.productsList=page.locator("//div[@id='tbodyid']/div/div/div/h4/a");
-        this.addtocartlink=page.locator("//a[normalize-space()='Add to cart']");
-        this.cart=page.locator("//a[normalize-space()='Cart']");
+        this.productsList = page.locator(
+            "//div[@id='tbodyid']/div/div/div/h4/a"
+        );
+
+        this.addtocartlink = page.locator(
+            "//a[normalize-space()='Add to cart']"
+        );
+
+        this.cart = page.locator(
+            "//a[normalize-space()='Cart']"
+        );
     }
 
-    async  addProductToCart(prodcutName){
-    const productList= await this.page.$$(this.productsList)
-    for(const product of productList){
+    async addProductToCart(productName) {
 
-        if(product===prodcutName){
-            awaitproduct.click();
-            break;
+        const count = await this.productsList.count();
+
+        for (let i = 0; i < count; i++) {
+
+            const product = this.productsList.nth(i);
+
+            const productText = (await product.textContent()).trim();
+
+            if (productName === productText) {
+
+                await product.click();
+
+                break;
+            }
         }
-    }  
-    
-    await this.page.on('dialog',async dialog=>{
-        if(daliog.message().includes('added')){
+
+        // Wait for Add to Cart button
+        await this.addtocartlink.waitFor({
+            state: 'visible'
+        });
+
+        // Handle alert BEFORE clicking Add to Cart
+        this.page.once('dialog', async dialog => {
+            console.log(dialog.message());
             await dialog.accept();
-        }
-    })
+        });
 
-    await this.page.locator(this.addtocartlink).click();
-
-    }
-   
-    async goToCart(){
-        await this.page.locator(this.cart).click();
+        // Click Add to Cart
+        await this.addtocartlink.click();
     }
 
-
-}
-
+    async goToCart() {
+        await this.cart.click();
+    }
+};
